@@ -4,7 +4,7 @@ import requests
 
 app = FastAPI()
 
-AFILIADO_ML = "SEU_CODIGO_AQUI"  # pode deixar vazio por enquanto
+AFILIADO_ML = ""  # depois você coloca seu código de afiliado aqui
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,18 +20,27 @@ def home():
 @app.get("/buscar")
 def buscar(produto: str):
     url = "https://api.mercadolibre.com/sites/MLB/search"
+
     params = {
         "q": produto,
         "limit": 10
     }
 
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0 Safari/537.36"
+        )
+    }
+
     try:
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-}
-
-response = requests.get(url, params=params, headers=headers, timeout=10)
-
+        response = requests.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=10
+        )
         response.raise_for_status()
         data = response.json()
 
