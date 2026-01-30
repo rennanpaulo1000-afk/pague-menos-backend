@@ -4,13 +4,18 @@ import requests
 
 app = FastAPI()
 
-# Permitir que o site da Hostinger acesse
+AFILIADO_ML = "SEU_CODIGO_AQUI"  # pode deixar vazio por enquanto
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def home():
+    return {"status": "Backend rodando com sucesso 🚀"}
 
 @app.get("/buscar")
 def buscar(produto: str):
@@ -20,17 +25,31 @@ def buscar(produto: str):
         "limit": 10
     }
 
-    response = requests.get(url, params=params)
-    data = response.json()
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
 
-    resultados = []
+        resultados = []
 
-    for item in data["results"]:
-        resultados.append({
-            "nome": item["title"],
-            "preco": item["price"],
-            "link": item["permalink"] + "?matt_tool=seulinkafiliado",
-            "imagem": item["thumbnail"]
-        })
+        if "results" not in data:
+            return {
+                "erro": "Resposta inesperada do Mercado Livre",
+                "resposta": data
+            }
 
-    return resultados
+        for item in data["results"]:
+            resultados.append({
+                "nome": item.get("title"),
+                "preco": item.get("price"),
+                "link": item.get("permalink"),
+                "imagem": item.get("thumbnail")
+            })
+
+        return resultados
+
+    except Exception as e:
+        return {
+            "erro": "Falha ao buscar produtos",
+            "detalhe": str(e)
+        }
